@@ -48,7 +48,7 @@
 <body>
 
     <header>
-        <h1>HIFI Coffee Shop</h1>
+        <h1>Coffee Shop</h1>
     </header>
 
     <nav>
