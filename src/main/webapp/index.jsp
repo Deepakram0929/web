@@ -157,7 +157,7 @@
 <body>
 
   <header>
-    <h1>Have a Coffee with Deepak ☕</h1>
+    <h1>Have a Coffee with Deepak </h1>
     <p>Let’s share stories, ideas, and dreams over a warm cup</p>
   </header>
 
