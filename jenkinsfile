@@ -2,18 +2,18 @@ pipeline {
     agent any
 
     environment {
-        PATH = "$PATH:/usr/share/maven/bin"
+        PATH = "$PATH:/usr/share/maven/bin"  // add your Maven path if needed
     }
 
     triggers {
-        githubPush()
+        githubPush()  // add this line to trigger the pipeline on GitHub push events
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'master',
-                    url: 'https://github.com/Deepakram0929/web.git'
+                git branch: 'master', // add your branch name
+                    url: 'https://github.com/Deepakram0929/web.git'  // add your Git repository URL
             }
         }
 
@@ -44,39 +44,40 @@ pipeline {
         stage('Deploy to Tomcat Server') {
             steps {
                 echo 'Deploying to Tomcat server...'
-                deploy adapters: [
-                    tomcat9(
-                        alternativeDeploymentContext: '',
-                        credentialsId: '07e2feac-3496-478d-baa4-03a6c388ac0d',
+                step([$class: 'DeployPublisher',
+                    adapters: [tomcat9(
+                        credentialsId: 'tomcat',   // add your Tomcat credentials in Jenkins
+                        url: 'http://18.233.97.210:9090/', // add your Tomcat server URL
                         path: '',
-                        url: 'http://34.203.56.67:9090/'
-                    )
-                ],
-                contextPath: 'deepak-web',
-                war: '**/*.war'
+                        alternativeDeploymentContext: ''
+                    )],
+                    contextPath: 'deepak-web-app',
+                    war: '**/target/*.war'
+                ])
             }
         }
     }
-
 
     post {
         always {
             script {
                 def buildStatus = currentBuild.currentResult
                 def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'Auto Triggered'
+                def color = buildStatus == 'SUCCESS' ? 'green' : 'red'
 
                 emailext(
-                    subject: "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    subject: "Jenkins Build Notification - ${currentBuild.fullDisplayName}",
                     body: """
+                        <h2 style="color:${color};">Build Notification</h2>
                         <p><strong>Project:</strong> ${env.JOB_NAME}</p>
                         <p><strong>Build Number:</strong> ${env.BUILD_NUMBER}</p>
-                        <p><strong>Status:</strong> ${buildStatus}</p>
+                        <p><strong>Status:</strong> <span style="color:${color};">${buildStatus}</span></p>
                         <p><strong>Started by:</strong> ${buildUser}</p>
-                        <p><strong>Build URL:</strong> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                        <p><strong>View build:</strong> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
                     """,
-                    to: 'deepakram0929@gmail.com',
-                    from: 'deepakram0920@gmail.com',
-                    replyTo: 'deepakram0920@gmail.com',
+                    to: 'deepak@gmail.com',
+                    from: 'deepakram@gmail.com',
+                    replyTo: 'deepakram@gmail.com',
                     mimeType: 'text/html'
                 )
             }
