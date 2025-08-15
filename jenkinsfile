@@ -2,18 +2,18 @@ pipeline {
     agent any
 
     environment {
-        PATH = "$PATH:/usr/share/maven/bin"  // add your Maven path if needed
+        PATH = "$PATH:/usr/share/maven/bin"
     }
 
     triggers {
-        githubPush()  // add this line to trigger the pipeline on GitHub push events
+        githubPush()
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'master', // add your branch name
-                    url: 'https://github.com/Deepakram0929/web.git'  // add your Git repository URL
+                git branch: 'master', 
+                    url: 'https://github.com/Deepakram0929/web.git'
             }
         }
 
@@ -29,14 +29,26 @@ pipeline {
             }
         }
 
+        stage('Code Quality') {
+            steps {
+                sh '''
+                mvn sonar:sonar \
+                  -Dsonar.projectKey=web-app \
+                  -Dsonar.host.url=http://54.172.1.147:9000 \
+                  -Dsonar.login=3a57137c97247abfa6a4f1c44284516e25725ae8
+                '''
+            }
+        }
+
         stage('Package') {
             steps {
                 sh 'mvn clean package'
+                sh 'cp target/*.war .'
             }
             post {
                 success {
                     echo 'Deployment successful!'
-                    archiveArtifacts artifacts: '**/target/*.war'
+                    archiveArtifacts artifacts: '*.war'
                 }
             }
         }
@@ -46,13 +58,13 @@ pipeline {
                 echo 'Deploying to Tomcat server...'
                 step([$class: 'DeployPublisher',
                     adapters: [tomcat9(
-                        credentialsId: 'tomcat',   // add your Tomcat credentials in Jenkins
-                        url: 'http://18.233.97.210:9090/', // add your Tomcat server URL
-                        path: '',
-                        alternativeDeploymentContext: ''
+                        alternativeDeploymentContext: '', 
+                        credentialsId: 'tomcat', 
+                        path: '', 
+                        url: 'http://54.172.1.147:9090/'
                     )],
-                    contextPath: 'deepak-web-app',
-                    war: '**/target/*.war'
+                    contextPath: 'deepak-web',
+                    war: '*.war'
                 ])
             }
         }
@@ -75,9 +87,9 @@ pipeline {
                         <p><strong>Started by:</strong> ${buildUser}</p>
                         <p><strong>View build:</strong> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
                     """,
-                    to: 'deepak@gmail.com',
-                    from: 'deepakram@gmail.com',
-                    replyTo: 'deepakram@gmail.com',
+                    to: 'deepakram0929@gmail.com',
+                    from: 'deepakram0929@gmail.com',
+                    replyTo: 'deepakram0920@gmail.com',
                     mimeType: 'text/html'
                 )
             }
